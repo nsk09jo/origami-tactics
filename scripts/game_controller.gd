@@ -77,7 +77,7 @@ func setup_board() -> void:
 
     for y in range(GRID_SIZE):
         for x in range(GRID_SIZE):
-            var tile: Button = BoardTileScene.instantiate()
+            var tile: BoardTile = BoardTileScene.instantiate()
             var pos := Vector2i(x, y)
             tile.grid_position = pos
             tile.tile_pressed.connect(_on_tile_pressed)

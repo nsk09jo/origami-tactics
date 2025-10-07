@@ -1,3 +1,4 @@
+class_name BoardTile
 extends Button
 
 signal tile_pressed(position: Vector2i)
