@@ -1,25 +1,28 @@
 extends Control
 
-const GRID_SIZE := 9
-const BASE_CP := 5
-const SHRINE_BONUS_CAP := 2
-const MAX_IDLE_TURNS := 50
+const GRID_SIZE = 9
+const BASE_CP = 5
+const SHRINE_BONUS_CAP = 2
+const MAX_IDLE_TURNS = 50
 
-const BoardTileScene := preload("res://scenes/BoardTile.tscn")
+const BoardTileScene = preload("res://scenes/BoardTile.tscn")
+const UnitStateScript = preload("res://scripts/unit_state.gd")
 
-const WATER_TILES := [
+const WATER_TILES = [
     Vector2i(3, 3), Vector2i(4, 3), Vector2i(5, 3),
     Vector2i(3, 5), Vector2i(4, 5), Vector2i(5, 5)
 ]
 
-const SHRINE_TILES := [Vector2i(2, 4), Vector2i(6, 4)]
+const SHRINE_TILES = [Vector2i(2, 4), Vector2i(6, 4)]
 
-const BASE_POSITIONS := {
-    0: Vector2i(GRID_SIZE - 1, GRID_SIZE // 2),
-    1: Vector2i(0, GRID_SIZE // 2)
+const CENTER_ROW = int(GRID_SIZE / 2)
+
+const BASE_POSITIONS = {
+    0: Vector2i(GRID_SIZE - 1, CENTER_ROW),
+    1: Vector2i(0, CENTER_ROW)
 }
 
-const STARTING_UNITS := {
+const STARTING_UNITS = {
     0: {
         Vector2i(3, 7): "Frog",
         Vector2i(4, 7): "Crane",
@@ -55,7 +58,7 @@ var available_moves: Dictionary = {}
 var available_attacks: Dictionary = {}
 var special_targets: Dictionary = {}
 var carry_pending_drop: bool = false
-var carried_unit: UnitState = null
+var carried_unit = null
 var carried_origin: Vector2i = Vector2i(-1, -1)
 var consecutive_idle_turns: int = 0
 var total_small_turns: int = 0
@@ -77,13 +80,13 @@ func setup_board() -> void:
 
     for y in range(GRID_SIZE):
         for x in range(GRID_SIZE):
-            var tile: BoardTile = BoardTileScene.instantiate()
-            var pos := Vector2i(x, y)
+            var tile: Button = BoardTileScene.instantiate()
+            var pos = Vector2i(x, y)
             tile.grid_position = pos
             tile.tile_pressed.connect(_on_tile_pressed)
             board_container.add_child(tile)
             tiles[pos] = tile
-            var terrain_type := "plain"
+            var terrain_type = "plain"
             if pos in WATER_TILES:
                 terrain_type = "water"
             elif pos in SHRINE_TILES:
@@ -99,10 +102,10 @@ func setup_units() -> void:
     for player in STARTING_UNITS.keys():
         for pos in STARTING_UNITS[player].keys():
             var unit_type: String = STARTING_UNITS[player][pos]
-            place_unit(pos, UnitState.new(unit_type, player))
+            place_unit(pos, UnitStateScript.new(unit_type, player))
     update_all_tiles()
 
-func place_unit(pos: Vector2i, unit: UnitState) -> void:
+func place_unit(pos: Vector2i, unit) -> void:
     units[pos] = unit
     update_tile(pos)
 
@@ -110,7 +113,7 @@ func update_tile(pos: Vector2i) -> void:
     if not tiles.has(pos):
         return
     var tile: Button = tiles[pos]
-    var unit := units.get(pos, null)
+    var unit = units.get(pos, null)
     tile.set_occupant(unit)
 
 func update_all_tiles() -> void:
@@ -150,7 +153,7 @@ func select_position(pos: Vector2i, cancel_carry: bool = true) -> void:
     clear_selection(cancel_carry)
     if not units.has(pos):
         return
-    var unit: UnitState = units[pos]
+    var unit = units[pos]
     if unit.owner != current_player:
         return
     selected_position = pos
@@ -170,7 +173,7 @@ func select_position(pos: Vector2i, cancel_carry: bool = true) -> void:
             tiles[target_pos].highlight(true)
     update_log_preview(unit)
 
-func update_log_preview(unit: UnitState) -> void:
+func update_log_preview(unit) -> void:
     action_log.append_text("[color=#66c]Selected %s[/color]\n" % unit.describe())
 
 func _on_tile_pressed(pos: Vector2i) -> void:
@@ -211,7 +214,7 @@ func _on_tile_pressed(pos: Vector2i) -> void:
         clear_selection()
 
 func attempt_move(origin: Vector2i, destination: Vector2i, info: Dictionary) -> void:
-    var unit: UnitState = units.get(origin)
+    var unit = units.get(origin)
     if unit == null:
         return
     var cost: int = info.get("cost", 1)
@@ -254,8 +257,8 @@ func attempt_move(origin: Vector2i, destination: Vector2i, info: Dictionary) -> 
         select_position(destination)
 
 func attempt_attack(origin: Vector2i, target_pos: Vector2i, info: Dictionary) -> void:
-    var attacker: UnitState = units.get(origin)
-    var defender: UnitState = units.get(target_pos)
+    var attacker = units.get(origin)
+    var defender = units.get(target_pos)
     if attacker == null or defender == null:
         return
     var cost: int = info.get("cost", 1)
@@ -287,20 +290,20 @@ func attempt_attack(origin: Vector2i, target_pos: Vector2i, info: Dictionary) ->
     check_victory_conditions()
 
 func attempt_push(origin: Vector2i, target_pos: Vector2i) -> void:
-    var frog: UnitState = units.get(origin)
-    var enemy: UnitState = units.get(target_pos)
+    var frog = units.get(origin)
+    var enemy = units.get(target_pos)
     if frog == null or enemy == null:
         return
     if cp_pool[current_player] < 1:
         log_event("Not enough CP to push.")
         return
     cp_pool[current_player] -= 1
-    var direction := (target_pos - origin)
-    var destination := target_pos + direction
+    var direction = (target_pos - origin)
+    var destination = target_pos + direction
     if not is_within_bounds(destination):
         log_event("Push blocked by edge.")
         return
-    var terrain_type := terrain.get(destination, "plain")
+    var terrain_type = terrain.get(destination, "plain")
     if units.has(destination):
         log_event("Push failed; space occupied.")
         return
@@ -323,8 +326,8 @@ func attempt_push(origin: Vector2i, target_pos: Vector2i) -> void:
     select_position(origin)
 
 func begin_carry(target_pos: Vector2i) -> void:
-    var crane: UnitState = units.get(selected_position)
-    var passenger: UnitState = units.get(target_pos)
+    var crane = units.get(selected_position)
+    var passenger = units.get(target_pos)
     if crane == null or passenger == null:
         return
     if crane.has_carried:
@@ -342,10 +345,10 @@ func begin_carry(target_pos: Vector2i) -> void:
 func attempt_drop_carried_unit(pos: Vector2i) -> void:
     if not carry_pending_drop or carried_unit == null:
         return
-    var unit: UnitState = units.get(selected_position)
+    var unit = units.get(selected_position)
     if unit == null:
         return
-    if pos.distance_to(selected_position) > 1:
+    if vector_distance(pos, selected_position) > 1.0:
         log_event("Drop target must be adjacent.")
         return
     if units.has(pos):
@@ -360,7 +363,7 @@ func attempt_drop_carried_unit(pos: Vector2i) -> void:
     carried_unit = null
     carried_origin = Vector2i(-1, -1)
     carry_pending_drop = false
-    var crane_pos := selected_position
+    var crane_pos = selected_position
     after_action_updates(unit, crane_pos)
     clear_selection()
     select_position(crane_pos)
@@ -369,7 +372,7 @@ func attempt_drop_carried_unit(pos: Vector2i) -> void:
 func highlight_drop_options(origin: Vector2i) -> void:
     var options: Array = []
     for direction in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN, Vector2i(-1, -1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(1, 1)]:
-        var pos := origin + direction
+        var pos = origin + direction
         if not is_within_bounds(pos):
             continue
         if units.has(pos):
@@ -390,7 +393,7 @@ func highlight_drop_options(origin: Vector2i) -> void:
         if tiles.has(pos):
             tiles[pos].highlight(true)
 
-func compute_moves(origin: Vector2i, unit: UnitState) -> Dictionary:
+func compute_moves(origin: Vector2i, unit) -> Dictionary:
     var results: Dictionary = {}
     match unit.unit_type:
         "Crane":
@@ -407,16 +410,16 @@ func compute_moves(origin: Vector2i, unit: UnitState) -> Dictionary:
             results = compute_walker_moves(origin, unit, 1)
     return results
 
-func compute_attacks(origin: Vector2i, unit: UnitState) -> Dictionary:
+func compute_attacks(origin: Vector2i, unit) -> Dictionary:
     var result: Dictionary = {}
-    var directions := [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN, Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1)]
+    var directions = [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN, Vector2i(-1, 0), Vector2i(1, 0), Vector2i(0, -1), Vector2i(0, 1)]
     for direction in directions:
-        var target := origin + direction
+        var target = origin + direction
         if not is_within_bounds(target):
             continue
         if not units.has(target):
             continue
-        var enemy: UnitState = units[target]
+        var enemy = units[target]
         if enemy.owner == unit.owner:
             continue
         if unit.unit_type == "Frog" and unit.last_move_distance < 2:
@@ -424,32 +427,32 @@ func compute_attacks(origin: Vector2i, unit: UnitState) -> Dictionary:
         result[target] = {"cost": 1}
     return result
 
-func compute_special_targets(origin: Vector2i, unit: UnitState) -> Dictionary:
+func compute_special_targets(origin: Vector2i, unit) -> Dictionary:
     var result: Dictionary = {}
     if unit.unit_type == "Crane" and not unit.has_carried and carried_unit == null:
         for offset in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN, Vector2i(-1, -1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(1, 1)]:
-            var pos := origin + offset
+            var pos = origin + offset
             if not is_within_bounds(pos):
                 continue
             if units.has(pos) and units[pos].owner == current_player:
                 result[pos] = {"type": "carry"}
     if unit.unit_type == "Frog":
         for offset in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
-            var pos := origin + offset
+            var pos = origin + offset
             if not is_within_bounds(pos):
                 continue
             if units.has(pos) and units[pos].owner != current_player:
                 result[pos] = {"type": "push"}
     return result
 
-func compute_crane_moves(origin: Vector2i, unit: UnitState) -> Dictionary:
+func compute_crane_moves(origin: Vector2i, unit) -> Dictionary:
     var result: Dictionary = {}
     for x in range(GRID_SIZE):
         for y in range(GRID_SIZE):
-            var pos := Vector2i(x, y)
+            var pos = Vector2i(x, y)
             if pos == origin:
                 continue
-            var distance := origin.distance_to(pos)
+            var distance = vector_distance(origin, pos)
             if distance > unit.current_mp or distance > unit.max_mp():
                 continue
             if terrain.get(pos, "plain") == "water":
@@ -459,11 +462,11 @@ func compute_crane_moves(origin: Vector2i, unit: UnitState) -> Dictionary:
             result[pos] = {"cost": distance, "distance": distance}
     return result
 
-func compute_frog_moves(origin: Vector2i, unit: UnitState) -> Dictionary:
+func compute_frog_moves(origin: Vector2i, unit) -> Dictionary:
     var result: Dictionary = {}
     for offset in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
         for step in range(1, 4):
-            var pos := origin + offset * step
+            var pos = origin + offset * step
             if not is_within_bounds(pos):
                 break
             if units.has(pos):
@@ -478,7 +481,7 @@ func compute_frog_moves(origin: Vector2i, unit: UnitState) -> Dictionary:
             result[pos] = {"cost": step, "distance": step}
     return result
 
-func compute_walker_moves(origin: Vector2i, unit: UnitState, max_range: int) -> Dictionary:
+func compute_walker_moves(origin: Vector2i, unit, max_range: int) -> Dictionary:
     var result: Dictionary = {}
     var queue: Array = []
     var visited: Dictionary = {}
@@ -489,8 +492,8 @@ func compute_walker_moves(origin: Vector2i, unit: UnitState, max_range: int) -> 
         var pos: Vector2i = item.pos
         var distance: int = item.distance
         for offset in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
-            var next := pos + offset
-            var next_distance := distance + 1
+            var next = pos + offset
+            var next_distance = distance + 1
             if not is_within_bounds(next):
                 continue
             if next_distance > unit.current_mp or next_distance > max_range:
@@ -502,17 +505,17 @@ func compute_walker_moves(origin: Vector2i, unit: UnitState, max_range: int) -> 
             if visited.has(next) and visited[next] <= next_distance:
                 continue
             visited[next] = next_distance
-            var path := item.path.duplicate()
+            var path = item.path.duplicate()
             path.append(next)
             result[next] = {"cost": next_distance, "distance": next_distance, "path": path}
             queue.append({"pos": next, "distance": next_distance, "path": path})
     return result
 
-func compute_shuriken_moves(origin: Vector2i, unit: UnitState) -> Dictionary:
+func compute_shuriken_moves(origin: Vector2i, unit) -> Dictionary:
     var result: Dictionary = {}
-    var directions := [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
+    var directions = [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]
     for direction in directions:
-        var pos := origin
+        var pos = origin
         for step in range(1, unit.max_mp() + 1):
             pos += direction
             if not is_within_bounds(pos):
@@ -530,54 +533,54 @@ func compute_shuriken_moves(origin: Vector2i, unit: UnitState) -> Dictionary:
 
 func build_line_path(origin: Vector2i, destination: Vector2i) -> Array:
     var path: Array = [origin]
-    var direction := (destination - origin).sign()
-    var pos := origin
+    var direction = (destination - origin).sign()
+    var pos = origin
     while pos != destination:
         pos += direction
         path.append(pos)
     return path
 
-func calculate_damage(attacker: UnitState, defender: UnitState, origin: Vector2i, target: Vector2i, info: Dictionary) -> int:
-    var effective_arm := defender.arm() + defensive_wait[defender.owner]
+func calculate_damage(attacker, defender, origin: Vector2i, target: Vector2i, info: Dictionary) -> int:
+    var effective_arm = defender.arm() + defensive_wait[defender.owner]
     if is_adjacent_to_enemy_box(target, defender.owner):
         effective_arm = max(0, effective_arm - 1)
-    var base_damage := max(1, attacker.atk() - effective_arm)
+    var base_damage = max(1, attacker.atk() - effective_arm)
     if attacker.unit_type == "Shuriken":
         var path: Array = info.get("path", build_line_path(origin, target))
-        var enemies_passed := count_enemies_passed(attacker.owner, path)
+        var enemies_passed = count_enemies_passed(attacker.owner, path)
         if enemies_passed >= 2:
             base_damage += 1
     return base_damage
 
 func is_adjacent_to_enemy_box(pos: Vector2i, owner: int) -> bool:
     for offset in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN, Vector2i(-1, -1), Vector2i(-1, 1), Vector2i(1, -1), Vector2i(1, 1)]:
-        var check := pos + offset
+        var check = pos + offset
         if units.has(check):
-            var unit: UnitState = units[check]
+            var unit = units[check]
             if unit.owner != owner and unit.unit_type == "Box":
                 return true
     return false
 
 func count_enemies_passed(owner: int, path: Array) -> int:
-    var count := 0
+    var count = 0
     for pos in path:
         if not units.has(pos):
             continue
-        var unit: UnitState = units[pos]
+        var unit = units[pos]
         if unit.owner != owner and pos != path.back():
             count += 1
     return count
 
-func maybe_counter_attack(attacker: UnitState, attacker_pos: Vector2i, defender: UnitState, defender_pos: Vector2i) -> void:
-    if attacker_pos.distance_to(defender_pos) > 1:
+func maybe_counter_attack(attacker, attacker_pos: Vector2i, defender, defender_pos: Vector2i) -> void:
+    if vector_distance(attacker_pos, defender_pos) > 1.0:
         return
     if not defender.can_counter_attack():
         return
     defender.mark_countered()
-    var effective_arm := attacker.arm() + defensive_wait[attacker.owner]
+    var effective_arm = attacker.arm() + defensive_wait[attacker.owner]
     if is_adjacent_to_enemy_box(attacker_pos, attacker.owner):
         effective_arm = max(0, effective_arm - 1)
-    var damage := max(1, defender.atk() - effective_arm)
+    var damage = max(1, defender.atk() - effective_arm)
     attacker.apply_fd(damage)
     last_action_turn = total_small_turns
     log_event("%s counter-attacked for %d FD." % [defender.unit_type, damage])
@@ -587,14 +590,14 @@ func maybe_counter_attack(attacker: UnitState, attacker_pos: Vector2i, defender:
         consecutive_idle_turns = 0
         last_action_turn = total_small_turns
 
-func maybe_intercept(target_pos: Vector2i, defender: UnitState, attacker_pos: Vector2i) -> Vector2i:
+func maybe_intercept(target_pos: Vector2i, defender, attacker_pos: Vector2i) -> Vector2i:
     if defender.unit_type == "Turtle":
         return target_pos
     for offset in [Vector2i.LEFT, Vector2i.RIGHT, Vector2i.UP, Vector2i.DOWN]:
-        var check := target_pos + offset
+        var check = target_pos + offset
         if not units.has(check):
             continue
-        var turtle: UnitState = units[check]
+        var turtle = units[check]
         if turtle.owner != defender.owner:
             continue
         if turtle.unit_type != "Turtle":
@@ -608,19 +611,19 @@ func maybe_intercept(target_pos: Vector2i, defender: UnitState, attacker_pos: Ve
         return target_pos
     return target_pos
 
-func remove_unit(pos: Vector2i, unit: UnitState) -> void:
+func remove_unit(pos: Vector2i, unit) -> void:
     units.erase(pos)
     update_tile(pos)
     if terrain.get(pos, "plain") == "water":
         unit.grant_water_bonus()
 
-func after_action_updates(unit: UnitState, position: Vector2i) -> void:
+func after_action_updates(unit, position: Vector2i) -> void:
     update_tile(position)
     check_water_effects(position, unit)
     update_ui()
 
-func check_water_effects(pos: Vector2i, unit: UnitState) -> void:
-    var terrain_type := terrain.get(pos, "plain")
+func check_water_effects(pos: Vector2i, unit) -> void:
+    var terrain_type = terrain.get(pos, "plain")
     if terrain_type == "water":
         log_event("%s is in water: +1 MP until it leaves." % unit.unit_type)
         unit.grant_water_bonus()
@@ -637,6 +640,11 @@ func format_position(pos: Vector2i) -> String:
 func is_within_bounds(pos: Vector2i) -> bool:
     return pos.x >= 0 and pos.y >= 0 and pos.x < GRID_SIZE and pos.y < GRID_SIZE
 
+func vector_distance(a: Vector2i, b: Vector2i) -> float:
+    var va = Vector2(a.x, a.y)
+    var vb = Vector2(b.x, b.y)
+    return va.distance_to(vb)
+
 func log_event(text: String) -> void:
     action_log.append_text(text + "\n")
 
@@ -650,12 +658,12 @@ func start_turn(player: int) -> void:
     check_victory_conditions()
 
 func refresh_cp(player: int) -> void:
-    var shrine_bonus := min(shrine_controlled[player], SHRINE_BONUS_CAP)
+    var shrine_bonus = min(shrine_controlled[player], SHRINE_BONUS_CAP)
     cp_pool[player] = BASE_CP + shrine_bonus
 
 func refresh_units(player: int) -> void:
     for pos in units.keys():
-        var unit: UnitState = units[pos]
+        var unit = units[pos]
         if unit.owner == player:
             unit.reset_turn()
 
@@ -675,13 +683,13 @@ func end_turn() -> void:
         log_event("50 turns without action – draw.")
         game_over = true
         return
-    var next_player := (current_player + 1) % 2
+    var next_player = (current_player + 1) % 2
     start_turn(next_player)
 
 func update_shrine_control() -> void:
     shrine_controlled = {0: 0, 1: 0}
     for shrine_pos in SHRINE_TILES:
-        var owner := -1
+        var owner = -1
         if units.has(shrine_pos):
             owner = units[shrine_pos].owner
         if owner >= 0:
@@ -693,12 +701,12 @@ func update_shrine_control() -> void:
 func check_victory_conditions() -> void:
     for player in [0, 1]:
         var base_pos: Vector2i = BASE_POSITIONS[player]
-        var opponent := 1 - player
+        var opponent = 1 - player
         if units.has(base_pos) and units[base_pos].owner == opponent:
             log_event("Player %d occupies Player %d base and wins!" % [opponent + 1, player + 1])
             game_over = true
             return
-    var owners_present := {}
+    var owners_present = {}
     for unit in units.values():
         owners_present[unit.owner] = true
     if owners_present.size() < 2:
