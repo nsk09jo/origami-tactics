@@ -80,7 +80,7 @@ func setup_board() -> void:
             var tile: Button = BoardTileScene.instantiate()
             var pos := Vector2i(x, y)
             tile.grid_position = pos
-            tile.connect("tile_pressed", Callable(self, "_on_tile_pressed"))
+            tile.tile_pressed.connect(_on_tile_pressed)
             board_container.add_child(tile)
             tiles[pos] = tile
             var terrain_type := "plain"
