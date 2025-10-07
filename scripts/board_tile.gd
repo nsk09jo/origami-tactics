@@ -7,7 +7,7 @@ var terrain: String = "plain"
 var occupant: Variant = null
 
 func _ready() -> void:
-    connect("pressed", Callable(self, "_on_pressed"))
+    pressed.connect(_on_pressed)
     _update_visual()
 
 func set_terrain(value: String) -> void:
@@ -30,7 +30,7 @@ func reset_highlight() -> void:
     self.modulate = Color(1, 1, 1)
 
 func _on_pressed() -> void:
-    emit_signal("tile_pressed", grid_position)
+    tile_pressed.emit(grid_position)
 
 func _update_visual() -> void:
     var label_text := ""
