@@ -49,6 +49,11 @@ text = "End Turn"
 size_flags_horizontal = 1
 size_flags_vertical = 1
 
+[node name="HowToPlay" type="Button" parent="Layout/Header"]
+text = "遊び方"
+size_flags_horizontal = 1
+size_flags_vertical = 1
+
 [node name="BoardWrapper" type="MarginContainer" parent="Layout"]
 size_flags_horizontal = 3
 size_flags_vertical = 3

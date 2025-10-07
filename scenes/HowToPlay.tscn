@@ -1,0 +1,45 @@
+[gd_scene load_steps=2 format=3 uid="uid://how_to_play"]
+
+[ext_resource type="Script" path="res://scripts/how_to_play.gd" id="1"]
+
+[node name="HowToPlay" type="Control"]
+anchors_preset = 15
+anchor_left = 0.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1")
+
+[node name="Layout" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_left = 0.05
+anchor_top = 0.05
+anchor_right = 0.95
+anchor_bottom = 0.95
+size_flags_horizontal = 3
+size_flags_vertical = 3
+alignment = 0
+
+[node name="Title" type="Label" parent="Layout"]
+custom_minimum_size = Vector2(0, 60)
+text = "折り紙タクティクス　用語と遊び方"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="Layout"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Text" type="RichTextLabel" parent="Layout/Scroll"]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+bbcode_enabled = true
+text = "[b]基本用語[/b]\n・指令ポイント（CP）: ターンのはじめに獲得する行動資源。ユニットの展開や特技の使用に必要です。\n・拠点（ベース）: 各軍の出撃地点。敵に占領されると敗北します。\n・祠: 盤面中央付近にある特別なマス。占領すると追加のCPを得ます。\n・水辺: カエルなど一部のユニットが活躍できる地形。移動や攻撃に影響します。\n\n[b]勝利条件[/b]\n・敵のベースを占領する。\n・または敵軍を全滅させる。\n・一定ターン経過まで勝敗がつかない場合は、より多くの祠を支配している側の勝利です。\n\n[b]ターンの流れ[/b]\n1. CPの確認: 祠の支配状況に応じたCPを獲得します。\n2. ユニットの選択: 盤面の自軍ユニットをタップして行動候補を表示します。\n3. 行動の実行: \n   ・[color=#66c]青い[/color]ハイライトは移動可能マス。選択すると移動します。\n   ・[color=#c66]赤い[/color]ハイライトは攻撃可能マス。敵を攻撃できます。\n   ・特別なハイライトはユニット固有の特技です。内容をよく確認しましょう。\n4. 行動終了: 行動後に別のユニットを操作するか、\"ターン終了\"を選んで相手に手番を渡します。\n\n[b]代表的なユニット[/b]\n・ツル: 長距離の滑空移動が得意で、敵陣への奇襲に向きます。\n・カエル: 水辺を素早く移動でき、跳躍攻撃で距離を詰めます。\n・カメ: 高い防御力を持ち、拠点防衛に最適です。\n・箱: 味方を運搬できる支援ユニット。運搬後は素早く退却しましょう。\n・手裏剣: 遠距離攻撃で安全圏から敵を牽制します。\n\n[b]ヒント[/b]\n・祠を早期に確保してCPを確保すると長期戦に有利です。\n・ユニットの組み合わせで包囲や連携攻撃を狙いましょう。\n・敵の行動ログを読み、次の一手を予測することが勝利の鍵です。\n"
+
+[node name="BackButton" type="Button" parent="Layout"]
+custom_minimum_size = Vector2(0, 50)
+text = "メインメニューに戻る"
+size_flags_horizontal = 3
+
