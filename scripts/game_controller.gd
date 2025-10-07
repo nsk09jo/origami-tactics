@@ -7,6 +7,7 @@ const MAX_IDLE_TURNS = 50
 
 const BoardTileScene = preload("res://scenes/BoardTile.tscn")
 const UnitStateScript = preload("res://scripts/unit_state.gd")
+const HOW_TO_PLAY_SCENE_PATH = "res://scenes/HowToPlay.tscn"
 
 const WATER_TILES = [
     Vector2i(3, 3), Vector2i(4, 3), Vector2i(5, 3),
@@ -44,6 +45,7 @@ const STARTING_UNITS = {
 @onready var cp_label: Label = $"Layout/Header/CPLabel"
 @onready var action_log: RichTextLabel = $"Layout/ActionLog"
 @onready var end_turn_button: Button = $"Layout/Header/EndTurn"
+@onready var how_to_play_button: Button = $"Layout/Header/HowToPlay"
 
 var tiles: Dictionary = {}
 var terrain: Dictionary = {}
@@ -67,10 +69,14 @@ var last_action_turn: int = 0
 
 func _ready() -> void:
     end_turn_button.pressed.connect(_on_end_turn_pressed)
+    how_to_play_button.pressed.connect(_on_how_to_play_pressed)
     setup_board()
     setup_units()
     start_turn(0)
     log_event("Origami Tactics v0.91 – Game start")
+
+func _on_how_to_play_pressed() -> void:
+    get_tree().change_scene_to_file(HOW_TO_PLAY_SCENE_PATH)
 
 func setup_board() -> void:
     tiles.clear()
