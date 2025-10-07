@@ -15,8 +15,8 @@ const WATER_TILES := [
 const SHRINE_TILES := [Vector2i(2, 4), Vector2i(6, 4)]
 
 const BASE_POSITIONS := {
-    0: Vector2i(GRID_SIZE - 1, GRID_SIZE / 2),
-    1: Vector2i(0, GRID_SIZE / 2)
+    0: Vector2i(GRID_SIZE - 1, GRID_SIZE // 2),
+    1: Vector2i(0, GRID_SIZE // 2)
 }
 
 const STARTING_UNITS := {
